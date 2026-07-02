@@ -1,32 +1,25 @@
 #!/usr/bin/python3
-"""Prints the titles of the first 10 hot posts listed for a given subreddit."""
-import requests
+"""Module that queries the Reddit API for top 10 hot posts."""
+import json
+import ssl
+import urllib.request
+
+ssl._create_default_https_context = ssl._create_unverified_context
 
 
 def top_ten(subreddit):
-    """Queries Reddit API and prints titles of first 10 hot posts."""
-    url = "https://www.reddit.com/r/{}/hot.json".format(subreddit)
-    headers = {"User-Agent": "mozilla/5.0"}
-    params = {"limit": 10}
-
+    """Print titles of the first 10 hot posts for a subreddit."""
+    url = "https://www.reddit.com/r/{}/hot.json?limit=10".format(subreddit)
+    headers = {"User-Agent": "python:alu.api.advanced:v1.0 (by /u/alu)"}
+    req = urllib.request.Request(url, headers=headers)
     try:
-        response = requests.get(
-            url, headers=headers, params=params, allow_redirects=False
-        )
+        with urllib.request.urlopen(req) as r:
+            if "/r/{}/".format(subreddit) not in r.geturl():
+                print(None)
+                return
+            data = json.loads(r.read().decode('utf-8'))
+            posts = data.get("data", {}).get("children", [])
+            for post in posts:
+                print(post.get("data", {}).get("title"))
     except Exception:
-        return
-
-    if response.status_code != 200:
         print(None)
-        return
-
-    data = response.json()
-    posts = data.get("data", {}).get("children", [])
-
-    if not posts:
-        return
-
-    for post in posts:
-        title = post.get("data", {}).get("title")
-        if title:
-            print(title)
