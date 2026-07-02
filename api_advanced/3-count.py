@@ -1,52 +1,43 @@
 #!/usr/bin/python3
-""" 3-count.py """
-import requests
+"""Module that recursively counts keywords in Reddit hot post titles."""
+import json
+import ssl
+import urllib.request
+
+ssl._create_default_https_context = ssl._create_unverified_context
 
 
-def count_words(subreddit, word_list, after="", count=[]):
-    """ prints a sorted count of given keywords """
-
-    if after == "":
-        count = [0] * len(word_list)
-
-    url = "https://www.reddit.com/r/{}/hot.json".format(subreddit)
-    request = requests.get(url,
-                           params={'after': after},
-                           allow_redirects=False,
-                           headers={'User-Agent': 'Mozilla/5.0'})
-
-    if request.status_code == 200:
-        data = request.json()
-
-        for topic in (data['data']['children']):
-            for word in topic['data']['title'].split():
-                for i in range(len(word_list)):
-                    if word_list[i].lower() == word.lower():
-                        count[i] += 1
-
-        after = data['data']['after']
-        if after is None:
-            save = []
-            for i in range(len(word_list)):
-                for j in range(i + 1, len(word_list)):
-                    if word_list[i].lower() == word_list[j].lower():
-                        save.append(j)
-                        count[i] += count[j]
-
-            for i in range(len(word_list)):
-                for j in range(i, len(word_list)):
-                    if (count[j] > count[i] or
-                            (word_list[i] > word_list[j] and
-                             count[j] == count[i])):
-                        aux = count[i]
-                        count[i] = count[j]
-                        count[j] = aux
-                        aux = word_list[i]
-                        word_list[i] = word_list[j]
-                        word_list[j] = aux
-
-            for i in range(len(word_list)):
-                if (count[i] > 0) and i not in save:
-                    print("{}: {}".format(word_list[i].lower(), count[i]))
-        else:
-            count_words(subreddit, word_list, after, count)
+def count_words(subreddit, word_list, after=None, word_count=None):
+    """Print sorted count of keywords in all hot posts of a subreddit."""
+    if word_count is None:
+        word_count = {}
+    url = "https://www.reddit.com/r/{}/hot.json?limit=100".format(subreddit)
+    if after:
+        url += "&after={}".format(after)
+    headers = {"User-Agent": "python:alu.api.advanced:v1.0 (by /u/alu)"}
+    req = urllib.request.Request(url, headers=headers)
+    try:
+        with urllib.request.urlopen(req) as r:
+            if "/r/{}/".format(subreddit) not in r.geturl():
+                return
+            data = json.loads(r.read().decode('utf-8')).get("data", {})
+    except Exception:
+        return
+    after = data.get("after")
+    keywords = set(w.lower() for w in word_list)
+    for post in data.get("children", []):
+        title = post.get("data", {}).get("title", "").lower().split()
+        for word in title:
+            if word in keywords:
+                word_count[word] = word_count.get(word, 0) + 1
+    if after:
+        return count_words(subreddit, word_list, after, word_count)
+    multiplier = {}
+    for w in word_list:
+        wl = w.lower()
+        multiplier[wl] = multiplier.get(wl, 0) + 1
+    final = {}
+    for word, cnt in word_count.items():
+        final[word] = cnt * multiplier.get(word, 1)
+    for word, cnt in sorted(final.items(), key=lambda x: (-x[1], x[0])):
+        print("{}: {}".format(word, cnt))
