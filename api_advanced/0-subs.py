@@ -1,10 +1,7 @@
 #!/usr/bin/python3
 """Module that queries the Reddit API for subscriber count."""
 import json
-import ssl
 import urllib.request
-
-ssl._create_default_https_context = ssl._create_unverified_context
 
 
 def number_of_subscribers(subreddit):
@@ -14,8 +11,6 @@ def number_of_subscribers(subreddit):
     req = urllib.request.Request(url, headers=headers)
     try:
         with urllib.request.urlopen(req) as r:
-            if "/r/{}/".format(subreddit) not in r.geturl():
-                return 0
             data = json.loads(r.read().decode('utf-8'))
             return data.get("data", {}).get("subscribers", 0)
     except Exception:

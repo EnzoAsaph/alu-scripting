@@ -1,10 +1,7 @@
 #!/usr/bin/python3
 """Module that recursively queries Reddit API for all hot post titles."""
 import json
-import ssl
 import urllib.request
-
-ssl._create_default_https_context = ssl._create_unverified_context
 
 
 def recurse(subreddit, hot_list=[], after=None):
@@ -16,8 +13,6 @@ def recurse(subreddit, hot_list=[], after=None):
     req = urllib.request.Request(url, headers=headers)
     try:
         with urllib.request.urlopen(req) as r:
-            if "/r/{}/".format(subreddit) not in r.geturl():
-                return None
             data = json.loads(r.read().decode('utf-8')).get("data", {})
     except Exception:
         return None

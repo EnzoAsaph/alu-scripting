@@ -1,10 +1,7 @@
 #!/usr/bin/python3
 """Module that queries the Reddit API for top 10 hot posts."""
 import json
-import ssl
 import urllib.request
-
-ssl._create_default_https_context = ssl._create_unverified_context
 
 
 def top_ten(subreddit):
@@ -14,11 +11,11 @@ def top_ten(subreddit):
     req = urllib.request.Request(url, headers=headers)
     try:
         with urllib.request.urlopen(req) as r:
-            if "/r/{}/".format(subreddit) not in r.geturl():
-                print(None)
-                return
             data = json.loads(r.read().decode('utf-8'))
             posts = data.get("data", {}).get("children", [])
+            if not posts:
+                print(None)
+                return
             for post in posts:
                 print(post.get("data", {}).get("title"))
     except Exception:

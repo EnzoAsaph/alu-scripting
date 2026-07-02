@@ -1,10 +1,7 @@
 #!/usr/bin/python3
 """Module that recursively counts keywords in Reddit hot post titles."""
 import json
-import ssl
 import urllib.request
-
-ssl._create_default_https_context = ssl._create_unverified_context
 
 
 def count_words(subreddit, word_list, after=None, word_count=None):
@@ -18,8 +15,6 @@ def count_words(subreddit, word_list, after=None, word_count=None):
     req = urllib.request.Request(url, headers=headers)
     try:
         with urllib.request.urlopen(req) as r:
-            if "/r/{}/".format(subreddit) not in r.geturl():
-                return
             data = json.loads(r.read().decode('utf-8')).get("data", {})
     except Exception:
         return
