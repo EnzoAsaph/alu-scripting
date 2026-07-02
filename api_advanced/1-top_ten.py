@@ -10,11 +10,14 @@ def top_ten(subreddit):
         "User-Agent": "python:alu.api.advanced:v1.0 (by /u/alu_student)"
     }
     params = {"limit": 10}
-    response = requests.get(url, headers=headers, params=params,
-                            allow_redirects=False)
-    if response.status_code != 200:
+    try:
+        response = requests.get(url, headers=headers, params=params,
+                                allow_redirects=False, verify=False)
+        if response.status_code != 200:
+            print(None)
+            return
+        posts = response.json().get("data", {}).get("children", [])
+        for post in posts:
+            print(post.get("data", {}).get("title"))
+    except Exception:
         print(None)
-        return
-    posts = response.json().get("data", {}).get("children", [])
-    for post in posts:
-        print(post.get("data", {}).get("title"))
