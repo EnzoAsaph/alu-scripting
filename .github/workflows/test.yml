@@ -1,0 +1,41 @@
+name: Test on Ubuntu
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.4'
+        continue-on-error: true
+
+      - name: Install dependencies
+        run: pip install requests 2>&1 || echo "pip failed"
+
+      - name: Test 0-subs.py
+        run: |
+          cd api_advanced
+          python3 -c "import sys; sys.path.insert(0, '.'); result = __import__('0-subs').number_of_subscribers('programming'); print('Result:', result)"
+        continue-on-error: true
+
+      - name: Test 0-subs.py error details
+        run: |
+          cd api_advanced
+          python3 0-subs.py 2>&1 || true
+          python3 -c "
+          import traceback
+          try:
+              import sys
+              sys.path.insert(0, '.')
+              m = __import__('0-subs')
+              result = m.number_of_subscribers('programming')
+              print('SUCCESS:', result)
+          except Exception as e:
+              traceback.print_exc()
+          "
+        continue-on-error: true
