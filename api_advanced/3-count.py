@@ -1,30 +1,32 @@
 #!/usr/bin/python3
 """Module that recursively counts keywords in Reddit hot post titles."""
-import json
-import urllib.request
+import requests
 
 
 def count_words(subreddit, word_list, after=None, word_count=None):
-    """Print sorted count of keywords in all hot posts of a subreddit."""
+    """Print a sorted count of given keywords in all hot post titles."""
     if word_count is None:
         word_count = {}
-    url = "https://www.reddit.com/r/{}/hot.json?limit=100".format(subreddit)
+    url = "https://www.reddit.com/r/{}/hot.json".format(subreddit)
+    headers = {"User-Agent": "linux:alu.api.advanced:v1.0 (by /u/enzoasaph)"}
+    params = {"limit": 100}
     if after:
-        url += "&after={}".format(after)
-    headers = {"User-Agent": "python:alu.api.advanced:v1.0 (by /u/alu)"}
-    req = urllib.request.Request(url, headers=headers)
+        params["after"] = after
     try:
-        with urllib.request.urlopen(req) as r:
-            data = json.loads(r.read().decode('utf-8')).get("data", {})
+        response = requests.get(url, headers=headers, params=params,
+                                allow_redirects=False, timeout=30)
+        if response.status_code != 200:
+            return
+        data = response.json().get("data", {})
     except Exception:
         return
-    after = data.get("after")
     keywords = set(w.lower() for w in word_list)
     for post in data.get("children", []):
         title = post.get("data", {}).get("title", "").lower().split()
         for word in title:
             if word in keywords:
                 word_count[word] = word_count.get(word, 0) + 1
+    after = data.get("after")
     if after:
         return count_words(subreddit, word_list, after, word_count)
     multiplier = {}

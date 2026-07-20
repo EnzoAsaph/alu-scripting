@@ -1,23 +1,37 @@
 #!/usr/bin/python3
-"""Module that queries the Reddit API for the first 10 hot posts."""
+"""Function that queries the Reddit API and prints top 10 hot post titles."""
 import requests
 
 
 def top_ten(subreddit):
-    """Print titles of the first 10 hot posts for a subreddit."""
+    """Print the titles of the first 10 hot posts for a given subreddit.
+
+    Args:
+        subreddit (str): the subreddit name to query.
+
+    If not a valid subreddit, prints None.
+    Redirects are not followed so that invalid subreddits are caught.
+    """
     url = "https://www.reddit.com/r/{}/hot.json".format(subreddit)
-    headers = {
-        "User-Agent": "windows:alu.api.advanced.enzo:v2.0 (by /u/EnzoAsaph)"
-    }
+    headers = {"User-Agent": "linux:alu.api.advanced:v1.0 (by /u/enzoasaph)"}
     params = {"limit": 10}
-    response = requests.get(url, headers=headers, params=params,
-                            allow_redirects=False)
+
+    try:
+        response = requests.get(url, headers=headers, params=params,
+                                allow_redirects=False, timeout=30)
+    except Exception:
+        print(None)
+        return
+
     if response.status_code != 200:
         print(None)
         return
-    posts = response.json().get("data", {}).get("children", [])
-    if not posts:
+
+    try:
+        posts = response.json().get("data", {}).get("children", [])
+    except ValueError:
         print(None)
         return
-    for post in posts:
+
+    for post in posts[:10]:
         print(post.get("data", {}).get("title"))
