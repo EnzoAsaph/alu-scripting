@@ -16,11 +16,15 @@ def top_ten(subreddit):
     params = {
         "limit": 10
     }
-    response = requests.get(url, headers=headers, params=params,
-                            allow_redirects=False)
-    if response.status_code != 200:
+    try:
+        response = requests.get(url, headers=headers, params=params,
+                                allow_redirects=False, timeout=30)
+        if response.status_code != 200:
+            print(None)
+            return
+        children = response.json().get("data", {}).get("children", [])
+    except Exception:
         print(None)
         return
-    results = response.json().get("data")
-    for child in results.get("children"):
-        print(child.get("data").get("title"))
+    for child in children:
+        print(child.get("data", {}).get("title"))
