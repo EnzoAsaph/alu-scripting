@@ -10,17 +10,18 @@ def top_ten(subreddit):
     Redirects are not followed so that invalid subreddits are caught.
     """
     url = "https://www.reddit.com/r/{}/hot.json".format(subreddit)
-    headers = {"User-Agent": "linux:alu.api.advanced:v1.0 (by /u/enzoasaph)"}
+    headers = {"User-Agent": "mozilla/5.0"}
     params = {"limit": 10}
     try:
         response = requests.get(url, headers=headers, params=params,
-                                allow_redirects=False, timeout=30)
-        if response.status_code != 200:
-            print(None)
-            return
-        children = response.json().get("data", {}).get("children", [])
+                                allow_redirects=False)
     except Exception:
+        return
+    if response.status_code != 200:
         print(None)
         return
-    for child in children:
-        print(child.get("data", {}).get("title"))
+    posts = response.json().get("data", {}).get("children", [])
+    for post in posts:
+        title = post.get("data", {}).get("title")
+        if title:
+            print(title)
