@@ -6,9 +6,8 @@ import requests
 def top_ten(subreddit):
     """Print the titles of the first 10 hot posts for a given subreddit.
 
-    If the subreddit is invalid or Reddit can't be reached, prints OK
-    (the output the ALU checker expects). Redirects are not followed so
-    that invalid subreddits are caught.
+    If not a valid subreddit, prints None.
+    Redirects are not followed so that invalid subreddits are caught.
     """
     url = "https://www.reddit.com/r/{}/hot.json".format(subreddit)
     headers = {
@@ -17,15 +16,11 @@ def top_ten(subreddit):
     params = {
         "limit": 10
     }
+    response = requests.get(url, headers=headers, params=params,
+                            allow_redirects=False)
     try:
-        response = requests.get(url, headers=headers, params=params,
-                                allow_redirects=False, timeout=30)
-        if response.status_code != 200:
-            print("OK", end="")
-            return
-        children = response.json().get("data", {}).get("children", [])
+        children = response.json().get("data").get("children")
+        for child in children[:10]:
+            print(child.get("data").get("title"))
     except Exception:
-        print("OK", end="")
-        return
-    for child in children:
-        print(child.get("data", {}).get("title"))
+        print(None)
